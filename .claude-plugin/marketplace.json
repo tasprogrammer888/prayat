@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "prayat",
+  "description": "ประหยัด — terse Thai mode for Claude Code. ~40-80% fewer output tokens, still understandable.",
+  "owner": {
+    "name": "tasprogrammer888"
+  },
+  "plugins": [
+    {
+      "name": "prayat",
+      "description": "พูดไทยกระชับ ลด token 40-80% โดยไม่เสีย technical accuracy — โค้ดย่อตามงาน (s:/f:/cc:...) + 3 ระดับ + token stats",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "description": "thai-token-saver: inject concise-mode ruleset at session start, handle control commands / stats, and keep the mode alive each turn (anti-drift).",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading thai-token-saver..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/prompt-router.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

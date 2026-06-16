@@ -1,0 +1,12 @@
+{
+  "name": "prayat",
+  "description": "ประหยัด (prayat) — terse Thai+English mode for Claude Code. Cuts output tokens ~40-80% across three levels (lite/moderate/full), adds task shorthand codes (s:/t:/e:/f:/cc:/r:...) that compress your prompts and route intent, live token+cost stats read from the real session log, anti-drift reminders, and safety auto-clarity. โหมดตอบไทยกระชับ ลด token โดยยังถูกต้องทาง technical.",
+  "version": "0.1.0",
+  "author": {
+    "name": "tasprogrammer888"
+  },
+  "homepage": "https://github.com/tasprogrammer888/prayat",
+  "repository": "https://github.com/tasprogrammer888/prayat",
+  "license": "MIT",
+  "keywords": ["thai", "tokens", "concise", "cost", "prayat", "ประหยัด"]
+}

@@ -1,0 +1,12 @@
+# dependencies
+node_modules/
+
+# runtime state / temp (plugin writes these to the user's HOME, but ignore if any leak in)
+.prayat/
+.tts-*/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

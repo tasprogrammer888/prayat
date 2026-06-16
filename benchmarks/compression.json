@@ -1,0 +1,14 @@
+{
+  "_comment": "Median output-token compression ratio per level vs a normal Thai answer (1 - terse/baseline). Used by stats.js to estimate tokens/cost saved. Calibrated 2026-06-16 from a 5-prompt run (explain / compare / why / how-to tasks). Values are TASK-DEPENDENT: summaries and code-fixes compress more (~0.7-0.8), long explanations less (~0.4). Re-derive with the calibration workflow when task mix changes.",
+  "compression": {
+    "lite": 0.39,
+    "moderate": 0.41,
+    "full": 0.61
+  },
+  "calibration": {
+    "date": "2026-06-16",
+    "prompts": 5,
+    "task_types": ["explain", "compare", "why-fix", "how-to", "explain"],
+    "note": "Measured by output character ratio vs a normal-Thai baseline across lite/moderate/full."
+  }
+}

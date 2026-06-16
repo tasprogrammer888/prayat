@@ -1,0 +1,73 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const TMP = path.join(os.tmpdir(), 'tts-test-stats-' + process.pid);
+process.env.PRAYAT_HOME = TMP;
+const stats = require('../hooks/stats');
+
+test.after(() => { try { fs.rmSync(TMP, { recursive: true, force: true }); } catch {} });
+
+test('priceForModel matches opus 4.x via prefix', () =>
+  assert.strictEqual(stats.priceForModel('claude-opus-4-8'), 75));
+test('priceForModel matches sonnet 4.x', () =>
+  assert.strictEqual(stats.priceForModel('claude-sonnet-4-6'), 15));
+test('priceForModel unknown -> null', () =>
+  assert.strictEqual(stats.priceForModel('gpt-4o'), null));
+
+test('formatUsd tiers', () => {
+  assert.strictEqual(stats.formatUsd(2.5), '$2.50');
+  assert.strictEqual(stats.formatUsd(0.05), '$0.050');
+  assert.strictEqual(stats.formatUsd(0.0005), '$0.0005');
+});
+
+test('parseDuration', () => {
+  assert.strictEqual(stats.parseDuration('7d'), 7 * 86_400_000);
+  assert.strictEqual(stats.parseDuration('2h'), 2 * 3_600_000);
+  assert.strictEqual(stats.parseDuration('bogus'), null);
+});
+
+test('humanizeTokens', () => {
+  assert.strictEqual(stats.humanizeTokens(1500), '1.5k');
+  assert.strictEqual(stats.humanizeTokens(2_000_000), '2.0M');
+  assert.strictEqual(stats.humanizeTokens(0), '0');
+});
+
+test('parseSession sums assistant usage and skips junk', () => {
+  fs.mkdirSync(TMP, { recursive: true });
+  const f = path.join(TMP, 's.jsonl');
+  fs.writeFileSync(f, [
+    JSON.stringify({ type: 'user', message: {} }),
+    JSON.stringify({ type: 'assistant', message: { model: 'claude-opus-4-8', usage: { output_tokens: 100, cache_read_input_tokens: 5 } } }),
+    JSON.stringify({ type: 'assistant', message: { model: 'claude-opus-4-8', usage: { output_tokens: 50, cache_read_input_tokens: 3 } } }),
+    'not json at all',
+    JSON.stringify({ type: 'assistant', message: { /* no usage */ } }),
+  ].join('\n'));
+  const r = stats.parseSession(f);
+  assert.strictEqual(r.outputTokens, 150);
+  assert.strictEqual(r.cacheReadTokens, 8);
+  assert.strictEqual(r.turns, 2);
+  assert.strictEqual(r.model, 'claude-opus-4-8');
+});
+
+test('deriveSavings yields positive saving when level ratio known', () => {
+  const r = stats.deriveSavings({ outputTokens: 1000, level: 'moderate', model: 'claude-opus-4-8' });
+  assert.ok(r.estSavedTokens > 0, 'expected positive token saving');
+  assert.ok(r.estSavedUsd > 0, 'expected positive usd saving');
+});
+
+test('deriveSavings is zero when level unknown/null', () => {
+  const r = stats.deriveSavings({ outputTokens: 1000, level: null, model: 'claude-opus-4-8' });
+  assert.strictEqual(r.estSavedTokens, 0);
+  assert.strictEqual(r.estSavedUsd, 0);
+});
+
+test('compression.json defines all three levels', () => {
+  const c = stats.loadCompression();
+  for (const lv of ['lite', 'moderate', 'full']) {
+    assert.ok(typeof c[lv] === 'number' && c[lv] > 0 && c[lv] < 1, `ratio for ${lv} should be 0..1`);
+  }
+});
