@@ -92,10 +92,22 @@ prayat/
 - **anti-drift** — ย้ำกติกาทุก turn ไม่กลับไปตอบยาว
 - **safety auto-clarity** — เลิกกระชับชั่วคราวตอนคำสั่งอันตราย / security warning
 
+## ลด token ของภาพ (รูป/screenshot)
+
+token ของภาพ ≈ (กว้าง × สูง พิกเซล) ÷ 750 — ขึ้นกับ **พิกเซล** เท่านั้น (ไม่ใช่ขนาดไฟล์/ฟอร์แมต/สี) วิธีลดคือ **ย่อ/crop** หรือถ้าเป็นภาพข้อความให้ส่งเป็น text แทน
+
+```bash
+python scripts/optimize-image.py shot.png --max-tokens 500
+python scripts/optimize-image.py chart.jpg --max-dim 768
+python scripts/optimize-image.py shot.png --report     # ประเมินอย่างเดียว
+```
+ต้องมี Pillow (`pip install pillow`) · ผลเซฟเป็น `<ชื่อ>.opt.<ext>` พร้อมรายงาน token ก่อน/หลัง
+
 ## ทดสอบ
 
 ```bash
-npm test   # หรือ: node --test tests/test_*.js
+npm test                                  # hooks (node, 44 เคส)
+python scripts/optimize-image.py --selftest   # image optimizer
 ```
 
 ## License
