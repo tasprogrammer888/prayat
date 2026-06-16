@@ -21,9 +21,11 @@ Examples:
 Needs Pillow:  pip install pillow
 """
 import argparse
+import json
 import math
 import os
 import sys
+import time
 
 # Force UTF-8 output so Thai prints correctly when captured by tooling or shown in
 # modern terminals (Windows consoles otherwise default to cp874 and would garble/crash).
@@ -58,6 +60,25 @@ def target_dims(w, h, max_tokens=None, max_dim=None, scale=None):
     nw = max(1, round(w * f))
     nh = max(1, round(h * f))
     return nw, nh
+
+
+def _log_saving(w, h, nw, nh, saved_tokens):
+    """Record this optimization to ~/.prayat/images.jsonl so prayat stats can
+    aggregate image savings (keyed by cwd = workspace). Best-effort."""
+    try:
+        home = os.environ.get("PRAYAT_HOME") or os.path.join(os.path.expanduser("~"), ".prayat")
+        os.makedirs(home, exist_ok=True)
+        rec = {
+            "ts": int(time.time() * 1000),
+            "project": os.getcwd(),
+            "saved_tokens": int(saved_tokens),
+            "orig": f"{w}x{h}",
+            "new": f"{nw}x{nh}",
+        }
+        with open(os.path.join(home, "images.jsonl"), "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec) + "\n")
+    except Exception:
+        pass
 
 
 def _fmt_size(n):
@@ -111,6 +132,7 @@ def optimize(path, out=None, max_tokens=None, max_dim=None, scale=None, report_o
         save_kwargs = {"quality": 85} if out_ext in (".jpg", ".jpeg", ".webp") else {}
         resized.save(out, **save_kwargs)
         after_bytes = os.path.getsize(out)
+        _log_saving(w, h, nw, nh, before_tok - after_tok)
 
         print(f"ใหม่:    {nw}x{nh}px  ~ {after_tok:,} tokens  ({_fmt_size(after_bytes)})")
         print(f"{sep}")

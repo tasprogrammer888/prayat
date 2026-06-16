@@ -46,6 +46,7 @@ process.stdin.on('end', () => {
     if (trigger.action === 'stats') {
       const statsScript = path.join(__dirname, 'stats.js');
       const args = ['--session-file', transcriptPath || ''];
+      if (data.cwd) args.push('--cwd', String(data.cwd));
       if (trigger.share) args.push('--share');
       if (trigger.all) args.push('--all');
       if (trigger.since) args.push('--since', trigger.since);

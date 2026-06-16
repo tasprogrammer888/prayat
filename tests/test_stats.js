@@ -71,3 +71,49 @@ test('compression.json defines all three levels', () => {
     assert.ok(typeof c[lv] === 'number' && c[lv] > 0 && c[lv] < 1, `ratio for ${lv} should be 0..1`);
   }
 });
+
+test('normProject normalizes slash style and case', () => {
+  assert.strictEqual(stats.normProject('D:\\AA\\Proj\\'), 'd:/aa/proj');
+  assert.strictEqual(stats.normProject('/d/AA/Proj'), '/d/aa/proj');
+  assert.strictEqual(stats.normProject(null), '');
+});
+
+test('aggregateImages sums and filters by project (normalized)', () => {
+  fs.mkdirSync(TMP, { recursive: true });
+  const f = path.join(TMP, 'images.jsonl');
+  fs.writeFileSync(f, [
+    JSON.stringify({ ts: 1000, project: 'D:/proj/a', saved_tokens: 100 }),
+    JSON.stringify({ ts: 2000, project: 'D:\\proj\\a', saved_tokens: 50 }), // same proj after norm
+    JSON.stringify({ ts: 3000, project: 'D:/proj/b', saved_tokens: 30 }),
+    'junk line',
+  ].join('\n'));
+  const all = stats.aggregateImages(f, {});
+  assert.strictEqual(all.count, 3);
+  assert.strictEqual(all.savedTokens, 180);
+  const a = stats.aggregateImages(f, { project: 'd:/proj/a' });
+  assert.strictEqual(a.count, 2);
+  assert.strictEqual(a.savedTokens, 150);
+});
+
+test('aggregateHistory filters by project', () => {
+  fs.mkdirSync(TMP, { recursive: true });
+  const f = path.join(TMP, 'history2.jsonl');
+  fs.writeFileSync(f, [
+    JSON.stringify({ ts: 1, session_id: 's1', project: 'D:/proj/a', est_saved_tokens: 200, output_tokens: 100 }),
+    JSON.stringify({ ts: 2, session_id: 's2', project: 'D:/proj/b', est_saved_tokens: 70, output_tokens: 50 }),
+  ].join('\n'));
+  const a = stats.aggregateHistory(f, { project: 'D:\\proj\\a' });
+  assert.strictEqual(a.sessions, 1);
+  assert.strictEqual(a.estSavedTokens, 200);
+});
+
+test('aggregateImages respects --since cutoff', () => {
+  fs.mkdirSync(TMP, { recursive: true });
+  const f = path.join(TMP, 'images2.jsonl');
+  fs.writeFileSync(f, [
+    JSON.stringify({ ts: 1, project: 'p', saved_tokens: 999 }),       // ancient
+    JSON.stringify({ ts: Date.now(), project: 'p', saved_tokens: 5 }), // now
+  ].join('\n'));
+  const recent = stats.aggregateImages(f, { sinceMs: 60_000 });
+  assert.strictEqual(recent.savedTokens, 5);
+});
